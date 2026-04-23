@@ -1,0 +1,48 @@
+# Compose file version
+version: "3.9"
+
+services:
+  web:
+    build:
+      context: .
+    container_name: identity-service-web
+    command: >
+      sh -c "
+      sh scripts/wait_for_db.sh &&
+      python manage.py migrate &&
+      python manage.py runserver 0.0.0.0:8000
+      "
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis
+
+  db:   # 👈 THIS NAME IS IMPORTANT
+    image: mysql:8.4
+    container_name: identity-service-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: commerce_identity_db
+    ports:
+      - "3308:3306"
+
+  redis:
+    image: redis:7
+    container_name: identity-service-redis
+# Named volumes for persistent storage
+volumes:
+  # Persistent volume for MySQL data
+  mysql_data:
+  # Persistent volume for Redis data
+  redis_data:
+
+# Internal Docker network
+networks:
+  # Custom bridge network for services to communicate
+  identity-network:
+    driver: bridge

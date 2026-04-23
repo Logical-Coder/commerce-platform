@@ -1,0 +1,100 @@
+# Compose file version
+version: "3.9"
+
+services:
+  # Django application service for production
+  web:
+    # Build the production image
+    build:
+      # Project root as build context
+      context: .
+      # Dockerfile path
+      dockerfile: docker/django/Dockerfile
+
+    # Container name
+    container_name: identity-service-web-prod
+
+    # Start app with gunicorn for production-grade serving
+    command: >
+      sh -c "
+      python manage.py migrate &&
+      gunicorn identity_service.wsgi:application --bind 0.0.0.0:8000 --workers 3
+      "
+
+    # Restart automatically unless explicitly stopped
+    restart: unless-stopped
+
+    # Load environment variables from .env
+    env_file:
+      - .env
+
+    # Expose app port
+    ports:
+      - "8000:8000"
+
+    # Start dependencies first
+    depends_on:
+      - db
+      - redis
+
+    # Internal network
+    networks:
+      - identity-network
+
+  # MySQL database service
+  db:
+    # Official MySQL image
+    image: mysql:8.4
+
+    # Container name
+    container_name: identity-service-mysql-prod
+
+    # Restart policy for production
+    restart: unless-stopped
+
+    # MySQL configuration
+    environment:
+      # Root password
+      MYSQL_ROOT_PASSWORD: rootpassword
+      # Database to auto-create
+      MYSQL_DATABASE: commerce_identity_db
+
+    # Persist DB data
+    volumes:
+      - mysql_data_prod:/var/lib/mysql
+
+    # Internal network only
+    networks:
+      - identity-network
+
+  # Redis cache service
+  redis:
+    # Official Redis image
+    image: redis:7
+
+    # Container name
+    container_name: identity-service-redis-prod
+
+    # Restart automatically
+    restart: unless-stopped
+
+    # Persist Redis data
+    volumes:
+      - redis_data_prod:/data
+
+    # Internal network only
+    networks:
+      - identity-network
+
+# Named volumes for production persistence
+volumes:
+  # MySQL persistent volume
+  mysql_data_prod:
+  # Redis persistent volume
+  redis_data_prod:
+
+# Internal service network
+networks:
+  # Bridge network for service-to-service communication
+  identity-network:
+    driver: bridge

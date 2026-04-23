@@ -1,12 +1,7 @@
-fastapi
-uvicorn[standard]
-sqlalchemy
-pymysql
+Django
+djangorestframework
+mysqlclient
 redis
-pydantic
-pydantic-settings
+django-redis
+djangorestframework-simplejwt
 python-dotenv
-python-jose
-email-validator
-cryptography
-bcrypt
