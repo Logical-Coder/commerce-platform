@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
+
+
 from app.api.dependencies import get_db
 from app.api.v1.dependencies.auth_dependencies import get_current_account
 from app.presentation.schemas.auth_request_schema import RegisterRequest, LoginRequest
@@ -12,31 +14,40 @@ from app.presentation.schemas.auth_response_schema import (
 from app.infrastructure.repositories.sqlalchemy_account_repository import SQLAlchemyAccountRepository
 from app.application.use_cases.register_account import RegisterAccountUseCase
 from app.application.use_cases.login_account import LoginAccountUseCase
-
+import logging
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
 
-@router.post("/register", response_model=MessageResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/register")
 def register(request: RegisterRequest, db: Session = Depends(get_db)):
+    logger.info(f"[ROUTE] Register called with email={request.email}")
+
     repository = SQLAlchemyAccountRepository(db)
     use_case = RegisterAccountUseCase(repository)
 
     try:
-        use_case.execute(email=request.email, password=request.password)
+        result = use_case.execute(email=request.email, password=request.password)
+        logger.info(f"[ROUTE] Register success for email={request.email}")
         return {"message": "Account registered successfully"}
     except ValueError as exc:
+        logger.error(f"[ROUTE] Register failed: {exc}")
         raise HTTPException(status_code=400, detail=str(exc))
 
 
-@router.post("/login", response_model=TokenResponse)
+@router.post("/login")
 def login(request: LoginRequest, db: Session = Depends(get_db)):
+    logger.info(f"[ROUTE] Login called with email={request.email}")
+
     repository = SQLAlchemyAccountRepository(db)
     use_case = LoginAccountUseCase(repository)
 
     try:
         token = use_case.execute(email=request.email, password=request.password)
+        logger.info(f"[ROUTE] Login success for email={request.email}")
         return {"access_token": token, "token_type": "bearer"}
     except ValueError as exc:
+        logger.error(f"[ROUTE] Login failed: {exc}")
         raise HTTPException(status_code=401, detail=str(exc))
 
 

@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from app.core import logging  # just import to initialize
 from app.core.config import settings
 from app.infrastructure.db.base import Base
 from app.infrastructure.db.session import engine

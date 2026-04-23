@@ -8,41 +8,30 @@ from app.infrastructure.repositories.sqlalchemy_account_repository import SQLAlc
 
 security_scheme = HTTPBearer()
 
+import logging
+logger = logging.getLogger(__name__)
 
 def get_current_account(
     credentials: HTTPAuthorizationCredentials = Depends(security_scheme),
     db: Session = Depends(get_db),
 ):
+    logger.info("[AUTH] Extracting token")
+
     token = credentials.credentials
 
-    try:
-        payload = decode_access_token(token)
-    except ValueError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired token",
-        )
+    logger.info("[AUTH] Decoding token")
+
+    payload = decode_access_token(token)
 
     email = payload.get("sub")
-    if not email:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token payload invalid",
-        )
+    logger.info(f"[AUTH] Token belongs to {email}")
 
     repository = SQLAlchemyAccountRepository(db)
     account = repository.get_by_email(email)
 
     if not account:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Account not found",
-        )
+        logger.error("[AUTH] Account not found")
+        raise HTTPException(...)
 
-    if account.account_status != "ACTIVE":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Account is not active",
-        )
-
+    logger.info(f"[AUTH] Authenticated user id={account.id}")
     return account
