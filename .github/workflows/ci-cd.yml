@@ -64,6 +64,7 @@ jobs:
           sudo apt-get install -y default-libmysqlclient-dev build-essential pkg-config mysql-client
 
       - name: Install Python dependencies
+        working-directory: identity-service
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
@@ -75,18 +76,22 @@ jobs:
           done
 
       - name: Run migrations
+        working-directory: identity-service
         run: python manage.py migrate
 
       - name: Run tests with coverage
+        working-directory: identity-service
         run: |
           coverage run manage.py test apps.accounts.tests
           coverage report -m
           coverage xml
 
       - name: Run flake8 lint
+        working-directory: identity-service
         run: flake8 .
 
       - name: Check Black formatting
+        working-directory: identity-service
         run: black --check .
 
       - name: Upload coverage XML
@@ -115,7 +120,7 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
-          context: .
-          file: Dockerfile
+          context: ./identity-service
+          file: ./identity-service/Dockerfile
           push: true
           tags: ghcr.io/${{ github.repository }}/identity-service:latest
