@@ -82,60 +82,46 @@ class AuthAPITest(TestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
     # Test login with non-existing account
     # Test login with non-existing account
     def test_login_user_not_found(self):
         response = self.client.post(
             "/api/auth/login",
-            {
-                "email": "notfound@example.com",
-                "password": "secret123"
-            },
-            format="json"
+            {"email": "notfound@example.com", "password": "secret123"},
+            format="json",
         )
 
         self.assertEqual(response.status_code, 401)
 
-
     # Test register with missing fields
     def test_register_invalid_data(self):
-        response = self.client.post(
-            "/api/auth/register",
-            {},
-            format="json"
-        )
+        response = self.client.post("/api/auth/register", {}, format="json")
 
         self.assertEqual(response.status_code, 400)
-
 
     # Test login missing password
     def test_login_missing_password(self):
         response = self.client.post(
-            "/api/auth/login",
-            {
-                "email": self.email
-            },
-            format="json"
+            "/api/auth/login", {"email": self.email}, format="json"
         )
 
         self.assertEqual(response.status_code, 400)
+
     def test_health_success(self):
         response = self.client.get("/health")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["status"], "ok")
-
 
     def test_health_db_success(self):
         response = self.client.get("/health/db")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["database"], "mysql")
 
-
     def test_health_redis_success(self):
         response = self.client.get("/health/redis")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["redis"], "connected")
-
 
     def test_login_inactive_account(self):
         self.user.account_status = "INACTIVE"
