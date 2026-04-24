@@ -82,7 +82,7 @@ jobs:
       - name: Run tests with coverage
         working-directory: identity-service
         run: |
-          coverage run manage.py test accounts
+          coverage run manage.py test apps/accounts/tests
           coverage report -m
           coverage xml
 
