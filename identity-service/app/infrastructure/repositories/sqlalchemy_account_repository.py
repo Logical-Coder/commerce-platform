@@ -3,7 +3,9 @@ from app.infrastructure.db.models.account_model import AccountModel
 
 
 import logging
+
 logger = logging.getLogger(__name__)
+
 
 class SQLAlchemyAccountRepository:
     def __init__(self, db: Session):

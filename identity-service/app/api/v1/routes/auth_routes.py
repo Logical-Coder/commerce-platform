@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 
-
 from app.api.dependencies import get_db
 from app.api.v1.dependencies.auth_dependencies import get_current_account
 from app.presentation.schemas.auth_request_schema import RegisterRequest, LoginRequest
@@ -11,10 +10,13 @@ from app.presentation.schemas.auth_response_schema import (
     TokenResponse,
     AccountProfileResponse,
 )
-from app.infrastructure.repositories.sqlalchemy_account_repository import SQLAlchemyAccountRepository
+from app.infrastructure.repositories.sqlalchemy_account_repository import (
+    SQLAlchemyAccountRepository,
+)
 from app.application.use_cases.register_account import RegisterAccountUseCase
 from app.application.use_cases.login_account import LoginAccountUseCase
 import logging
+
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/auth", tags=["Auth"])
 

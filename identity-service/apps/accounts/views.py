@@ -25,7 +25,6 @@ from apps.accounts.serializers import RegisterSerializer, LoginSerializer
 # Import service layer
 from apps.accounts.services import AccountService
 
-
 # Create logger for this file
 logger = logging.getLogger(__name__)
 
@@ -107,7 +106,9 @@ class RegisterAPIView(APIView):
         # Validate request
         if not serializer.is_valid():
             # Log serializer errors
-            logger.warning("[VIEW] Register serializer validation failed: %s", serializer.errors)
+            logger.warning(
+                "[VIEW] Register serializer validation failed: %s", serializer.errors
+            )
 
             # Return validation errors
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -164,7 +165,9 @@ class LoginAPIView(APIView):
         logger.info("[VIEW] LoginAPIView POST called")
 
         # Log incoming request data except sensitive values in real projects
-        logger.info("[VIEW] Login request data: %s", {"email": request.data.get("email")})
+        logger.info(
+            "[VIEW] Login request data: %s", {"email": request.data.get("email")}
+        )
 
         # Create serializer with request data
         serializer = LoginSerializer(data=request.data)
@@ -172,7 +175,9 @@ class LoginAPIView(APIView):
         # Validate request
         if not serializer.is_valid():
             # Log serializer validation error
-            logger.warning("[VIEW] Login serializer validation failed: %s", serializer.errors)
+            logger.warning(
+                "[VIEW] Login serializer validation failed: %s", serializer.errors
+            )
 
             # Return validation error response
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -188,7 +193,9 @@ class LoginAPIView(APIView):
             )
 
             # Log successful login
-            logger.info("[VIEW] Login successful for account id=%s", result["account"].id)
+            logger.info(
+                "[VIEW] Login successful for account id=%s", result["account"].id
+            )
 
             # Return JWT tokens and minimal user data
             return Response(

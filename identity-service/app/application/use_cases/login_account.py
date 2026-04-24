@@ -1,11 +1,16 @@
 from app.core.security import verify_password, create_access_token
-from app.infrastructure.repositories.sqlalchemy_account_repository import SQLAlchemyAccountRepository
+from app.infrastructure.repositories.sqlalchemy_account_repository import (
+    SQLAlchemyAccountRepository,
+)
 import logging
+
 logger = logging.getLogger(__name__)
+
 
 class LoginAccountUseCase:
     def __init__(self, repository: SQLAlchemyAccountRepository):
         self.repository = repository
+
     def execute(self, email: str, password: str):
         logger.info(f"[USECASE] Login started for {email}")
 

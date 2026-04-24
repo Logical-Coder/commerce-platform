@@ -46,3 +46,21 @@ networks:
   # Custom bridge network for services to communicate
   identity-network:
     driver: bridge
+deploy:
+  name: Deploy to Server
+  runs-on: ubuntu-latest
+  needs: docker-build
+  if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+  steps:
+    - name: Deploy using SSH
+      uses: appleboy/ssh-action@v1.2.0
+      with:
+        host: ${{ secrets.SERVER_IP }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        script: |
+          cd /home/ubuntu/identity-service
+          git pull origin main
+          docker compose -f docker-compose.prod.yml pull
+          docker compose -f docker-compose.prod.yml up -d --build

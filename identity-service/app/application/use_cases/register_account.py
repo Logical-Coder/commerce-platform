@@ -1,8 +1,12 @@
 from app.core.security import hash_password
-from app.infrastructure.repositories.sqlalchemy_account_repository import SQLAlchemyAccountRepository
+from app.infrastructure.repositories.sqlalchemy_account_repository import (
+    SQLAlchemyAccountRepository,
+)
 
 import logging
+
 logger = logging.getLogger(__name__)
+
 
 class RegisterAccountUseCase:
     def __init__(self, repository: SQLAlchemyAccountRepository):

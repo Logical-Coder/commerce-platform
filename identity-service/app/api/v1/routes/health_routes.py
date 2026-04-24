@@ -24,4 +24,7 @@ def health_db():
 @router.get("/redis")
 def health_redis():
     pong = redis_client.ping()
-    return {"status": "ok" if pong else "failed", "redis": "connected" if pong else "disconnected"}
+    return {
+        "status": "ok" if pong else "failed",
+        "redis": "connected" if pong else "disconnected",
+    }

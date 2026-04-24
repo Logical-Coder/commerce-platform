@@ -5,8 +5,11 @@ import logging
 from django.db import models
 
 # Import classes needed to build a custom authentication model
-from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
-
+from django.contrib.auth.models import (
+    AbstractBaseUser,
+    PermissionsMixin,
+    BaseUserManager,
+)
 
 # Create a logger object for this file/module
 # __name__ helps identify which file produced the log
@@ -107,7 +110,9 @@ class Account(AbstractBaseUser, PermissionsMixin):
     role = models.CharField(max_length=30, choices=ROLE_CHOICES, default="CUSTOMER")
 
     # Account status lets us disable or suspend users without deleting them
-    account_status = models.CharField(max_length=30, choices=STATUS_CHOICES, default="ACTIVE")
+    account_status = models.CharField(
+        max_length=30, choices=STATUS_CHOICES, default="ACTIVE"
+    )
 
     # This tells whether email verification has happened
     is_email_verified = models.BooleanField(default=False)

@@ -4,12 +4,16 @@ from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_db
 from app.core.security import decode_access_token
-from app.infrastructure.repositories.sqlalchemy_account_repository import SQLAlchemyAccountRepository
+from app.infrastructure.repositories.sqlalchemy_account_repository import (
+    SQLAlchemyAccountRepository,
+)
 
 security_scheme = HTTPBearer()
 
 import logging
+
 logger = logging.getLogger(__name__)
+
 
 def get_current_account(
     credentials: HTTPAuthorizationCredentials = Depends(security_scheme),

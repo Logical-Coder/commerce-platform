@@ -4,7 +4,6 @@ import logging
 # Import Account model
 from apps.accounts.models import Account
 
-
 # Create logger for this module
 logger = logging.getLogger(__name__)
 
@@ -26,9 +25,7 @@ class AccountRepository:
 
         # Use custom manager create_user so password is hashed correctly
         account = Account.objects.create_user(
-            email=email,
-            password=password,
-            **extra_fields
+            email=email, password=password, **extra_fields
         )
 
         # Log successful DB creation

@@ -4,7 +4,6 @@ import logging
 # Import DRF serializer tools
 from rest_framework import serializers
 
-
 # Create a logger object for this file
 logger = logging.getLogger(__name__)
 

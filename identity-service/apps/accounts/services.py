@@ -7,7 +7,6 @@ from apps.accounts.repositories import AccountRepository
 # Import JWT refresh token helper from simplejwt
 from rest_framework_simplejwt.tokens import RefreshToken
 
-
 # Create logger for this module
 logger = logging.getLogger(__name__)
 

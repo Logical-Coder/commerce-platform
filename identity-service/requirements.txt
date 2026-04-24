@@ -5,3 +5,8 @@ redis
 django-redis
 djangorestframework-simplejwt
 python-dotenv
+gunicorn
+coverage
+flake8
+black
+gunicorn
