@@ -25,6 +25,15 @@ from apps.accounts.serializers import RegisterSerializer, LoginSerializer
 # Import service layer
 from apps.accounts.services import AccountService
 
+# Import permission class to protect API
+from rest_framework.permissions import IsAuthenticated
+
+# Import account response serializer
+from apps.accounts.serializers import AccountProfileSerializer
+
+# Import custom role permission
+from apps.accounts.permissions import IsAdminRole
+
 # Create logger for this file
 logger = logging.getLogger(__name__)
 
@@ -232,3 +241,47 @@ class LoginAPIView(APIView):
                 {"detail": str(exc)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
+
+# Protected API to return current logged-in account details
+class MeAPIView(APIView):
+    # Only authenticated users can access this API
+    permission_classes = [IsAuthenticated]
+
+    # Handle GET request
+    def get(self, request):
+        # Log that /me API was called
+        logger.info("[VIEW] MeAPIView GET called")
+
+        # Get current authenticated user from request
+        account = request.user
+
+        # Log authenticated account id
+        logger.info("[VIEW] Current account id=%s", account.id)
+
+        # Convert account object into response data
+        serializer = AccountProfileSerializer(account)
+
+        # Return serialized account data
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+# API only ADMIN can access
+class AdminOnlyAPIView(APIView):
+    # User must be logged in and must be ADMIN
+    permission_classes = [IsAuthenticated, IsAdminRole]
+
+    # Handle GET request
+    def get(self, request):
+        # Log admin API call
+        logger.info("[VIEW] AdminOnlyAPIView GET called by user id=%s", request.user.id)
+
+        # Return success response
+        return Response(
+            {
+                "message": "Welcome ADMIN",
+                "email": request.user.email,
+                "role": request.user.role,
+            },
+            status=status.HTTP_200_OK,
+        )

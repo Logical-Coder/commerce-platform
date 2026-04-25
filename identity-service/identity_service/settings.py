@@ -138,6 +138,13 @@ DATABASES = {
     }
 }
 
+# Django REST Framework config
+REST_FRAMEWORK = {
+    # Default authentication classes for protected APIs
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ),
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators

@@ -46,3 +46,21 @@ class LoginSerializer(serializers.Serializer):
 
         # Return validated data
         return attrs
+
+
+# Serializer for current logged-in account response
+class AccountProfileSerializer(serializers.Serializer):
+    # Account primary key
+    id = serializers.IntegerField()
+
+    # Account email
+    email = serializers.EmailField()
+
+    # Account role like ADMIN / CUSTOMER
+    role = serializers.CharField()
+
+    # Account status like ACTIVE / INACTIVE
+    account_status = serializers.CharField()
+
+    # Email verification flag
+    is_email_verified = serializers.BooleanField()

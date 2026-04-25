@@ -138,3 +138,79 @@ class AuthAPITest(TestCase):
 
         self.assertEqual(response.status_code, 401)
         self.assertEqual(response.data["detail"], "Account is not active")
+
+
+def test_me_api_success(self):
+    login_response = self.client.post(
+        "/api/auth/login",
+        {
+            "email": self.email,
+            "password": self.password,
+        },
+        format="json",
+    )
+
+    access_token = login_response.data["access"]
+
+    response = self.client.get(
+        "/api/auth/me",
+        HTTP_AUTHORIZATION=f"Bearer {access_token}",
+    )
+
+    self.assertEqual(response.status_code, 200)
+    self.assertEqual(response.data["email"], self.email)
+
+
+def test_me_api_without_token(self):
+    response = self.client.get("/api/auth/me")
+
+    self.assertEqual(response.status_code, 401)
+
+
+def test_customer_cannot_access_admin_api(self):
+    login_response = self.client.post(
+        "/api/auth/login",
+        {
+            "email": self.email,
+            "password": self.password,
+        },
+        format="json",
+    )
+
+    access_token = login_response.data["access"]
+
+    response = self.client.get(
+        "/api/auth/admin-only",
+        HTTP_AUTHORIZATION=f"Bearer {access_token}",
+    )
+
+    self.assertEqual(response.status_code, 403)
+
+
+def test_admin_can_access_admin_api(self):
+    admin = Account.objects.create_user(
+        email="admin@example.com",
+        password="admin123",
+        role="ADMIN",
+        is_staff=True,
+        is_superuser=True,
+    )
+
+    login_response = self.client.post(
+        "/api/auth/login",
+        {
+            "email": admin.email,
+            "password": "admin123",
+        },
+        format="json",
+    )
+
+    access_token = login_response.data["access"]
+
+    response = self.client.get(
+        "/api/auth/admin-only",
+        HTTP_AUTHORIZATION=f"Bearer {access_token}",
+    )
+
+    self.assertEqual(response.status_code, 200)
+    self.assertEqual(response.data["role"], "ADMIN")
