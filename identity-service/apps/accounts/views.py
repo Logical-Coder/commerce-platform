@@ -26,7 +26,7 @@ from apps.accounts.serializers import RegisterSerializer, LoginSerializer
 from apps.accounts.services import AccountService
 
 # Import permission class to protect API
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 
 # Import account response serializer
 from apps.accounts.serializers import AccountProfileSerializer
@@ -102,6 +102,8 @@ def health_redis(request):
 # Register API view
 class RegisterAPIView(APIView):
     # Handle POST request for register
+    permission_classes = [AllowAny]
+
     def post(self, request):
         # Log that request entered register view
         logger.info("[VIEW] RegisterAPIView POST called")
@@ -169,6 +171,8 @@ class RegisterAPIView(APIView):
 # Login API view
 class LoginAPIView(APIView):
     # Handle POST request for login
+    permission_classes = [AllowAny]
+
     def post(self, request):
         # Log that request entered login view
         logger.info("[VIEW] LoginAPIView POST called")
