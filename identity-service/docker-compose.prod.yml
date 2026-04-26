@@ -9,7 +9,7 @@ services:
       # Project root as build context
       context: .
       # Dockerfile path
-      dockerfile: docker/django/Dockerfile
+      dockerfile: Dockerfile
 
     # Container name
     container_name: identity-service-web-prod

@@ -166,7 +166,6 @@ class AuthAPITest(TestCase):
         # Verify response belongs to logged-in user
         self.assertEqual(response.data["email"], self.email)
 
-
     # Test /me API without JWT token
     def test_me_api_without_token(self):
         # Call /me without Authorization header
@@ -174,7 +173,6 @@ class AuthAPITest(TestCase):
 
         # Verify unauthenticated request is rejected
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-
 
     # Test CUSTOMER user cannot access admin-only API
     def test_customer_cannot_access_admin_api(self):
@@ -199,7 +197,6 @@ class AuthAPITest(TestCase):
 
         # Verify customer is forbidden
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
 
     # Test ADMIN user can access admin-only API
     def test_admin_can_access_admin_api(self):
