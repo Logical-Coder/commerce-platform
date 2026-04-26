@@ -34,8 +34,11 @@ from apps.accounts.serializers import AccountProfileSerializer
 # Import custom role permission
 from apps.accounts.permissions import IsAdminRole
 
+from rest_framework.permissions import AllowAny, IsAuthenticated
+
 # Create logger for this file
 logger = logging.getLogger(__name__)
+
 
 
 # Basic health endpoint
@@ -102,6 +105,7 @@ def health_redis(request):
 # Register API view
 class RegisterAPIView(APIView):
     # Handle POST request for register
+    permission_classes = [AllowAny]
     def post(self, request):
         # Log that request entered register view
         logger.info("[VIEW] RegisterAPIView POST called")
@@ -169,6 +173,7 @@ class RegisterAPIView(APIView):
 # Login API view
 class LoginAPIView(APIView):
     # Handle POST request for login
+    permission_classes = [AllowAny]
     def post(self, request):
         # Log that request entered login view
         logger.info("[VIEW] LoginAPIView POST called")
