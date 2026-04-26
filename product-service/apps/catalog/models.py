@@ -1,6 +1,7 @@
 # Import Django model classes
 from django.db import models
 
+
 class TimestampedModel(models.Model):
     # Abstract base model to add created_at and updated_at fields
     created_at = models.DateTimeField(auto_now_add=True)
@@ -9,6 +10,7 @@ class TimestampedModel(models.Model):
 
     class Meta:
         abstract = True
+
 
 # Category table stores product categories like Seeds, Nuts, Grains
 class Category(TimestampedModel):

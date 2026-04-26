@@ -14,18 +14,17 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
 # Import Django admin module
 from django.contrib import admin
 
 # Import path and include for URL routing
 from django.urls import path, include
 
-
 # Root URL configuration for product-service
 urlpatterns = [
     # Admin panel route
     path("admin/", admin.site.urls),
-
     # Include catalog app URLs at root level
     path("", include("apps.catalog.urls")),
 ]

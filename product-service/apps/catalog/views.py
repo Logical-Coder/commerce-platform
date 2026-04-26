@@ -16,6 +16,7 @@ from .serializers import CategorySerializer, ProductSerializer
 # Import custom permission for admin-only write operations
 from .permissions import IsAdminOrReadOnly
 
+
 # Health endpoint to verify product-service is running
 def health(request):
     # Return basic service health response
@@ -23,7 +24,6 @@ def health(request):
         {
             # API status
             "status": "ok",
-
             # Service name
             "service": "product-service",
         }
@@ -109,7 +109,7 @@ class ProductDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
 
     # Apply permission: public read, admin write
     permission_classes = [IsAdminOrReadOnly]
-    
+
     # Fetch products with related category
     queryset = Product.objects.select_related("category").all()
 

@@ -20,7 +20,6 @@ from pathlib import Path
 # Import load_dotenv to load values from .env file
 from dotenv import load_dotenv
 
-
 # Base directory of this Django project
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -32,7 +31,7 @@ load_dotenv(BASE_DIR / ".env")
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-=(*r5+ip+z83fh^760waczpqu!i$*8l%go0p*+e#@$myx@3p=y'
+SECRET_KEY = "django-insecure-=(*r5+ip+z83fh^760waczpqu!i$*8l%go0p*+e#@$myx@3p=y"
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -55,36 +54,32 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-ROOT_URLCONF = 'product_service.urls'
+ROOT_URLCONF = "product_service.urls"
 
 
 # SimpleJWT configuration for identity-service
 SIMPLE_JWT = {
     # Secret key used to sign JWT tokens
     "SIGNING_KEY": os.getenv("JWT_SECRET_KEY", SECRET_KEY),
-
     # Algorithm used to sign JWT tokens
     "ALGORITHM": os.getenv("JWT_ALGORITHM", "HS256"),
-
     # Access token valid duration
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
-
     # Refresh token valid duration
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
 }
 # Django REST Framework global configuration
 
 REST_FRAMEWORK = {
-
     "DEFAULT_AUTHENTICATION_CLASSES": [],
     # Enable filtering, search, and ordering globally
     "DEFAULT_FILTER_BACKENDS": [
@@ -92,32 +87,29 @@ REST_FRAMEWORK = {
         "rest_framework.filters.SearchFilter",
         "rest_framework.filters.OrderingFilter",
     ],
-
     # Enable pagination globally
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
-
     # Default records per page
     "PAGE_SIZE": 10,
 }
 
 
-
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
 ]
 
-WSGI_APPLICATION = 'product_service.wsgi.application'
+WSGI_APPLICATION = "product_service.wsgi.application"
 
 
 # Database
@@ -129,22 +121,16 @@ DATABASES = {
     "default": {
         # Use MySQL database engine
         "ENGINE": "django.db.backends.mysql",
-
         # Database name from .env file
         "NAME": os.getenv("DB_NAME", "commerce_product_db"),
-
         # Database user from .env file
         "USER": os.getenv("DB_USER", "root"),
-
         # Database password from .env file
         "PASSWORD": os.getenv("DB_PASSWORD", "rootpassword"),
-
         # Database host from .env file
         "HOST": os.getenv("DB_HOST", "127.0.0.1"),
-
         # Database port from .env file
         "PORT": os.getenv("DB_PORT", "3307"),
-
         # Test database config used during Django test execution
         "TEST": {
             # Separate database name for automated tests
@@ -159,16 +145,17 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        "NAME": "django.contrib.auth.password_validation."
+        "UserAttributeSimilarityValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
 
@@ -176,9 +163,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = "UTC"
 
 USE_I18N = True
 
@@ -188,4 +175,4 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = "static/"
