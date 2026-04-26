@@ -139,78 +139,100 @@ class AuthAPITest(TestCase):
         self.assertEqual(response.status_code, 401)
         self.assertEqual(response.data["detail"], "Account is not active")
 
+    # Test protected /me API with valid JWT token
+    def test_me_api_success(self):
+        # First login with existing test user to get JWT token
+        login_response = self.client.post(
+            "/api/auth/login",
+            {
+                "email": self.email,
+                "password": self.password,
+            },
+            format="json",
+        )
 
-def test_me_api_success(self):
-    login_response = self.client.post(
-        "/api/auth/login",
-        {
-            "email": self.email,
-            "password": self.password,
-        },
-        format="json",
-    )
+        # Extract access token from login response
+        access_token = login_response.data["access"]
 
-    access_token = login_response.data["access"]
+        # Call protected /me API using Bearer token
+        response = self.client.get(
+            "/api/auth/me",
+            HTTP_AUTHORIZATION=f"Bearer {access_token}",
+        )
 
-    response = self.client.get(
-        "/api/auth/me",
-        HTTP_AUTHORIZATION=f"Bearer {access_token}",
-    )
+        # Verify API returns success status
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-    self.assertEqual(response.status_code, 200)
-    self.assertEqual(response.data["email"], self.email)
-
-
-def test_me_api_without_token(self):
-    response = self.client.get("/api/auth/me")
-
-    self.assertEqual(response.status_code, 401)
-
-
-def test_customer_cannot_access_admin_api(self):
-    login_response = self.client.post(
-        "/api/auth/login",
-        {
-            "email": self.email,
-            "password": self.password,
-        },
-        format="json",
-    )
-
-    access_token = login_response.data["access"]
-
-    response = self.client.get(
-        "/api/auth/admin-only",
-        HTTP_AUTHORIZATION=f"Bearer {access_token}",
-    )
-
-    self.assertEqual(response.status_code, 403)
+        # Verify response belongs to logged-in user
+        self.assertEqual(response.data["email"], self.email)
 
 
-def test_admin_can_access_admin_api(self):
-    admin = Account.objects.create_user(
-        email="admin@example.com",
-        password="admin123",
-        role="ADMIN",
-        is_staff=True,
-        is_superuser=True,
-    )
+    # Test /me API without JWT token
+    def test_me_api_without_token(self):
+        # Call /me without Authorization header
+        response = self.client.get("/api/auth/me")
 
-    login_response = self.client.post(
-        "/api/auth/login",
-        {
-            "email": admin.email,
-            "password": "admin123",
-        },
-        format="json",
-    )
+        # Verify unauthenticated request is rejected
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    access_token = login_response.data["access"]
 
-    response = self.client.get(
-        "/api/auth/admin-only",
-        HTTP_AUTHORIZATION=f"Bearer {access_token}",
-    )
+    # Test CUSTOMER user cannot access admin-only API
+    def test_customer_cannot_access_admin_api(self):
+        # Login as normal customer user
+        login_response = self.client.post(
+            "/api/auth/login",
+            {
+                "email": self.email,
+                "password": self.password,
+            },
+            format="json",
+        )
 
-    self.assertEqual(response.status_code, 200)
-    self.assertEqual(response.data["role"], "ADMIN")
+        # Extract customer access token
+        access_token = login_response.data["access"]
+
+        # Try to access admin-only API using customer token
+        response = self.client.get(
+            "/api/auth/admin-only",
+            HTTP_AUTHORIZATION=f"Bearer {access_token}",
+        )
+
+        # Verify customer is forbidden
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+    # Test ADMIN user can access admin-only API
+    def test_admin_can_access_admin_api(self):
+        # Create admin user in test database
+        admin_user = Account.objects.create_user(
+            email="admin@example.com",
+            password="admin123",
+            role="ADMIN",
+            is_staff=True,
+            is_superuser=True,
+        )
+
+        # Login as admin user
+        login_response = self.client.post(
+            "/api/auth/login",
+            {
+                "email": admin_user.email,
+                "password": "admin123",
+            },
+            format="json",
+        )
+
+        # Extract admin access token
+        access_token = login_response.data["access"]
+
+        # Call admin-only API using admin token
+        response = self.client.get(
+            "/api/auth/admin-only",
+            HTTP_AUTHORIZATION=f"Bearer {access_token}",
+        )
+
+        # Verify admin can access API
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Verify response role is ADMIN
+        self.assertEqual(response.data["role"], "ADMIN")
