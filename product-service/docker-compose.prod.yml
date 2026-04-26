@@ -1,0 +1,55 @@
+services:
+  web:
+    image: ghcr.io/logical-coder/product-service:latest
+    container_name: product-service-web-prod
+    command: >
+      sh -c "
+      sh scripts/wait_for_db.sh &&
+      python manage.py migrate &&
+      gunicorn product_service.wsgi:application --bind 0.0.0.0:8000 --workers 1
+      "
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      ENVIRONMENT: docker
+      DB_HOST: db
+      DB_PORT: 3306
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    ports:
+      - "8002:8000"
+    depends_on:
+      - db
+      - redis
+    networks:
+      - product-prod-network
+
+  db:
+    image: mysql:8.4
+    container_name: product-service-mysql-prod
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: commerce_product_db
+    volumes:
+      - product_mysql_data_prod:/var/lib/mysql
+    networks:
+      - product-prod-network
+
+  redis:
+    image: redis:7
+    container_name: product-service-redis-prod
+    restart: unless-stopped
+    volumes:
+      - product_redis_data_prod:/data
+    networks:
+      - product-prod-network
+
+volumes:
+  product_mysql_data_prod:
+  product_redis_data_prod:
+
+networks:
+  product-prod-network:
+    driver: bridge
