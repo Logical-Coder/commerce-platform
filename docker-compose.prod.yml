@@ -1,0 +1,78 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: commerce-mysql-prod
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+    volumes:
+      - commerce_mysql_prod:/var/lib/mysql
+    networks:
+      - commerce-prod-network
+
+  redis:
+    image: redis:7
+    container_name: commerce-redis-prod
+    restart: unless-stopped
+    volumes:
+      - commerce_redis_prod:/data
+    networks:
+      - commerce-prod-network
+
+  identity-service:
+    image: ghcr.io/logical-coder/identity-service:latest
+    container_name: identity-service-prod
+    restart: unless-stopped
+    env_file:
+      - ./identity-service/.env
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    command: >
+      sh -c "
+      sh scripts/wait_for_db.sh &&
+      python manage.py migrate &&
+      gunicorn identity_service.wsgi:application --bind 0.0.0.0:8000 --workers 1
+      "
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - commerce-prod-network
+
+  product-service:
+    image: ghcr.io/logical-coder/product-service:latest
+    container_name: product-service-prod
+    restart: unless-stopped
+    env_file:
+      - ./product-service/.env
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    command: >
+      sh -c "
+      sh scripts/wait_for_db.sh &&
+      python manage.py migrate &&
+      gunicorn product_service.wsgi:application --bind 0.0.0.0:8000 --workers 1
+      "
+    ports:
+      - "8002:8000"
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - commerce-prod-network
+
+volumes:
+  commerce_mysql_prod:
+  commerce_redis_prod:
+
+networks:
+  commerce-prod-network:
+    driver: bridge
