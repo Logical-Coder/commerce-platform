@@ -76,7 +76,17 @@ class AccountService:
         logger.info("[SERVICE] Password verified successfully for email=%s", email)
 
         # Create JWT refresh token object for this account
+        # Create refresh token for the logged-in account
         refresh = RefreshToken.for_user(account)
+
+        # Add account email inside JWT token payload
+        refresh["email"] = account.email
+
+        # Add account role inside JWT token payload
+        refresh["role"] = account.role
+
+        # Add account status inside JWT token payload
+        refresh["account_status"] = account.account_status
 
         # Log token generation
         logger.info("[SERVICE] JWT tokens generated for account id=%s", account.id)

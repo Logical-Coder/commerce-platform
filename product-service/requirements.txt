@@ -10,4 +10,5 @@ coverage
 flake8
 black
 gunicorn
+django-filters
 djangorestframework-simplejwt
