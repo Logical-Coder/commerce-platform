@@ -26,7 +26,7 @@ from apps.accounts.serializers import RegisterSerializer, LoginSerializer
 from apps.accounts.services import AccountService
 
 # Import permission class to protect API
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 
 # Import account response serializer
 from apps.accounts.serializers import AccountProfileSerializer
@@ -34,12 +34,8 @@ from apps.accounts.serializers import AccountProfileSerializer
 # Import custom role permission
 from apps.accounts.permissions import IsAdminRole
 
-from rest_framework.permissions import AllowAny, IsAuthenticated
-
 # Create logger for this file
 logger = logging.getLogger(__name__)
-
-
 
 # Basic health endpoint
 def health(request):
@@ -106,6 +102,7 @@ def health_redis(request):
 class RegisterAPIView(APIView):
     # Handle POST request for register
     permission_classes = [AllowAny]
+    
     def post(self, request):
         # Log that request entered register view
         logger.info("[VIEW] RegisterAPIView POST called")
@@ -168,7 +165,6 @@ class RegisterAPIView(APIView):
                 {"detail": str(exc)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
-
 
 # Login API view
 class LoginAPIView(APIView):
