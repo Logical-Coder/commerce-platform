@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 # Import os to read environment variables
+from datetime import timedelta
 import os
 
 # Import load_dotenv to load values from .env file
@@ -138,14 +139,27 @@ DATABASES = {
     }
 }
 
+
 # Django REST Framework config
 REST_FRAMEWORK = {
     # Default authentication classes for protected APIs
-    "DEFAULT_AUTHENTICATION_CLASSES": (
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
-    ),
+    "DEFAULT_AUTHENTICATION_CLASSES": []
 }
 
+# SimpleJWT configuration for identity-service
+SIMPLE_JWT = {
+    # Secret key used to sign JWT tokens
+    "SIGNING_KEY": os.getenv("JWT_SECRET_KEY", SECRET_KEY),
+
+    # Algorithm used for token signing
+    "ALGORITHM": os.getenv("JWT_ALGORITHM", "HS256"),
+
+    # Access token lifetime for development
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=1),
+
+    # Refresh token lifetime
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+}
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
 
