@@ -1,0 +1,55 @@
+services:
+  web:
+    image: ghcr.io/logical-coder/identity-service:latest
+    container_name: identity-service-web-staging
+    command: >
+      sh -c "
+      sh scripts/wait_for_db.sh &&
+      python manage.py migrate &&
+      gunicorn identity_service.wsgi:application --bind 0.0.0.0:8000 --workers 1
+      "
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      ENVIRONMENT: docker
+      DB_HOST: db
+      DB_PORT: 3306
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    ports:
+      - "8001:8000"
+    depends_on:
+      - db
+      - redis
+    networks:
+      - identity-staging-network
+
+  db:
+    image: mysql:8.4
+    container_name: identity-service-mysql-staging
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: commerce_identity_db
+    volumes:
+      - mysql_data_staging:/var/lib/mysql
+    networks:
+      - identity-staging-network
+
+  redis:
+    image: redis:7
+    container_name: identity-service-redis-staging
+    restart: unless-stopped
+    volumes:
+      - redis_data_staging:/data
+    networks:
+      - identity-staging-network
+
+volumes:
+  mysql_data_staging:
+  redis_data_staging:
+
+networks:
+  identity-staging-network:
+    driver: bridge
