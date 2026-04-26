@@ -149,6 +149,132 @@ Test-driven development approach
 
 ---
 
+---
+
+## 🚀 AWS EC2 Deployment (Unified Architecture)
+
+The platform now supports unified deployment on AWS EC2 with a single MySQL and Redis container for both services.
+
+### Deployment Architecture
+
+```
+AWS EC2 Instance (Ubuntu 22.04 LTS)
+├── Single MySQL 8.4 Container
+│   ├── commerce_identity_db
+│   └── commerce_product_db
+├── Single Redis 7 Container
+├── Identity Service (Port 8000)
+└── Product Service (Port 8002)
+```
+
+### Quick Start (Automated)
+
+```bash
+# Download and run the deployment script
+sudo bash /tmp/deploy-to-aws-ec2.sh
+```
+
+The script will automatically:
+- Install Docker and Docker Compose
+- Clone the repository
+- Create environment configuration
+- Start all services
+- Run migrations
+- Setup automated backups
+- Configure systemd for auto-start
+
+### Manual Deployment
+
+```bash
+# 1. SSH into your EC2 instance
+ssh -i your-key.pem ubuntu@your-ec2-ip
+
+# 2. Clone repository
+git clone https://github.com/your-org/commerce-platform.git
+cd commerce-platform
+
+# 3. Create environment file
+cp .env.production.example .env
+nano .env  # Edit with your values
+
+# 4. Deploy services
+docker-compose -f docker-compose.prod.yml up -d
+
+# 5. Verify deployment
+docker-compose -f docker-compose.prod.yml ps
+```
+
+### Access Services After Deployment
+
+- **Identity Service**: `http://your-ec2-ip:8000`
+- **Product Service**: `http://your-ec2-ip:8002`
+- **MySQL**: `your-ec2-ip:3306`
+- **Redis**: `your-ec2-ip:6379`
+
+### Important Files
+
+| File | Purpose |
+|------|---------|
+| `docker-compose.prod.yml` | Production deployment configuration |
+| `docker-compose.dev.yml` | Local development with unified setup |
+| `docs/AWS_EC2_DEPLOYMENT.md` | Comprehensive deployment guide |
+| `docs/QUICK_REFERENCE_AWS_EC2.md` | Quick reference and common commands |
+| `scripts/deploy-to-aws-ec2.sh` | Automated deployment script |
+| `.env.production.example` | Environment variables template |
+
+### Documentation
+
+- 📖 **Full Deployment Guide**: See [docs/AWS_EC2_DEPLOYMENT.md](docs/AWS_EC2_DEPLOYMENT.md)
+- ⚡ **Quick Reference**: See [docs/QUICK_REFERENCE_AWS_EC2.md](docs/QUICK_REFERENCE_AWS_EC2.md)
+
+### Common Commands
+
+```bash
+# View logs
+docker-compose -f docker-compose.prod.yml logs -f
+
+# Restart services
+docker-compose -f docker-compose.prod.yml restart
+
+# Access MySQL
+docker exec -it commerce-mysql-prod mysql -uroot -p
+
+# Access Redis
+docker exec -it commerce-redis-prod redis-cli
+
+# Create backup
+docker exec commerce-mysql-prod mysqldump -uroot -p${MYSQL_ROOT_PASSWORD} --all-databases > backup.sql
+```
+
+### Local Development with Unified Setup
+
+Test the unified architecture locally before deploying:
+
+```bash
+# Start services locally (same setup as production)
+docker-compose -f docker-compose.dev.yml up -d
+
+# Access services
+# Identity Service: http://localhost:8000
+# Product Service: http://localhost:8002
+
+# View logs
+docker-compose -f docker-compose.dev.yml logs -f
+```
+
+### Production Recommendations
+
+1. ✅ Setup Nginx reverse proxy
+2. ✅ Enable SSL with Let's Encrypt
+3. ✅ Configure automated backups
+4. ✅ Monitor resource usage
+5. ✅ Enable CloudWatch monitoring
+6. ✅ Setup auto-scaling policies
+
+See [docs/AWS_EC2_DEPLOYMENT.md](docs/AWS_EC2_DEPLOYMENT.md) for detailed instructions.
+
+---
+
 # 🔥 Optional (Add Badge at top)
 
 Add this at the top:

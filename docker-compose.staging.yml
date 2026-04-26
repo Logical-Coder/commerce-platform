@@ -1,0 +1,78 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: commerce-mysql-staging
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+    volumes:
+      - commerce_mysql_staging:/var/lib/mysql
+    networks:
+      - commerce-staging-network
+
+  redis:
+    image: redis:7
+    container_name: commerce-redis-staging
+    restart: unless-stopped
+    volumes:
+      - commerce_redis_staging:/data
+    networks:
+      - commerce-staging-network
+
+  identity-service:
+    image: ghcr.io/logical-coder/identity-service:latest
+    container_name: identity-service-staging
+    restart: unless-stopped
+    env_file:
+      - ./identity-service/.env
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    command: >
+      sh -c "
+      sh scripts/wait_for_db.sh &&
+      python manage.py migrate &&
+      gunicorn identity_service.wsgi:application --bind 0.0.0.0:8000 --workers 1
+      "
+    ports:
+      - "8001:8000"
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - commerce-staging-network
+
+  product-service:
+    image: ghcr.io/logical-coder/product-service:latest
+    container_name: product-service-staging
+    restart: unless-stopped
+    env_file:
+      - ./product-service/.env
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    command: >
+      sh -c "
+      sh scripts/wait_for_db.sh &&
+      python manage.py migrate &&
+      gunicorn product_service.wsgi:application --bind 0.0.0.0:8000 --workers 1
+      "
+    ports:
+      - "8003:8000"
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - commerce-staging-network
+
+volumes:
+  commerce_mysql_staging:
+  commerce_redis_staging:
+
+networks:
+  commerce-staging-network:
+    driver: bridge
