@@ -1,14 +1,10 @@
 Django
 djangorestframework
+django-filter
 mysqlclient
-redis
-django-redis
-djangorestframework-simplejwt
 python-dotenv
+djangorestframework-simplejwt
 gunicorn
 coverage
 flake8
 black
-gunicorn
-django-filters
-djangorestframework-simplejwt
