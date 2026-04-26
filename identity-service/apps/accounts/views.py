@@ -37,6 +37,7 @@ from apps.accounts.permissions import IsAdminRole
 # Create logger for this file
 logger = logging.getLogger(__name__)
 
+
 # Basic health endpoint
 def health(request):
     # Log request arrival
@@ -102,7 +103,7 @@ def health_redis(request):
 class RegisterAPIView(APIView):
     # Handle POST request for register
     permission_classes = [AllowAny]
-    
+
     def post(self, request):
         # Log that request entered register view
         logger.info("[VIEW] RegisterAPIView POST called")
@@ -166,10 +167,12 @@ class RegisterAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
+
 # Login API view
 class LoginAPIView(APIView):
     # Handle POST request for login
     permission_classes = [AllowAny]
+
     def post(self, request):
         # Log that request entered login view
         logger.info("[VIEW] LoginAPIView POST called")
