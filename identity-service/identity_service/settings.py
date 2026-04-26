@@ -148,24 +148,18 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
-
     # Default permission requires login unless view overrides it
-    "DEFAULT_PERMISSION_CLASSES": (
-        "rest_framework.permissions.IsAuthenticated",
-    ),
+    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
 }
 
 # SimpleJWT configuration for identity-service
 SIMPLE_JWT = {
     # Secret key used to sign JWT tokens
     "SIGNING_KEY": os.getenv("JWT_SECRET_KEY", SECRET_KEY),
-
     # Algorithm used for token signing
     "ALGORITHM": os.getenv("JWT_ALGORITHM", "HS256"),
-
     # Access token lifetime for development
     "ACCESS_TOKEN_LIFETIME": timedelta(hours=1),
-
     # Refresh token lifetime
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
 }
