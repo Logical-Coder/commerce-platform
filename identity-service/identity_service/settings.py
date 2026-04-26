@@ -141,9 +141,17 @@ DATABASES = {
 
 
 # Django REST Framework config
+# Django REST Framework configuration for identity-service
 REST_FRAMEWORK = {
-    # Default authentication classes for protected APIs
-    "DEFAULT_AUTHENTICATION_CLASSES": []
+    # Enable JWT authentication
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ],
+
+    # Require authentication by default
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+    ],
 }
 
 # SimpleJWT configuration for identity-service
