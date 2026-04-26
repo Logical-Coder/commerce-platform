@@ -148,7 +148,7 @@ jobs:
           script: |
             cd /home/ubuntu/commerce-platform
             git fetch origin main
-            git pull origin main
+            git reset --hard origin/main
             cd identity-service
             docker-compose -f docker-compose.prod.yml down
             docker-compose -f docker-compose.prod.yml up -d --build
