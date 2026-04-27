@@ -7,8 +7,13 @@ services:
       MYSQL_ROOT_PASSWORD: rootpassword
     volumes:
       - commerce_mysql_prod:/var/lib/mysql
+      - ./docker/my_sql/init:/docker-entrypoint-initdb.d
     networks:
       - commerce-prod-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
 
   redis:
     image: redis:7
@@ -18,6 +23,11 @@ services:
       - commerce_redis_prod:/data
     networks:
       - commerce-prod-network
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      timeout: 3s
+      retries: 5
 
   identity-service:
     image: ghcr.io/logical-coder/identity-service:latest
@@ -39,8 +49,10 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - mysql
-      - redis
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - commerce-prod-network
 
@@ -64,8 +76,10 @@ services:
     ports:
       - "8002:8000"
     depends_on:
-      - mysql
-      - redis
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - commerce-prod-network
 

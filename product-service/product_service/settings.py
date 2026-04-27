@@ -130,7 +130,7 @@ DATABASES = {
         # Database host from .env file
         "HOST": os.getenv("DB_HOST", "127.0.0.1"),
         # Database port from .env file
-        "PORT": os.getenv("DB_PORT", "3307"),
+        "PORT": os.getenv("DB_PORT", "3306"),
         # Test database config used during Django test execution
         "TEST": {
             # Separate database name for automated tests

@@ -16,7 +16,7 @@ services:
       MYSQL_DATABASE: commerce_identity_db
       TZ: "UTC"
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - commerce_mysql_data_dev:/var/lib/mysql
       - ./docker/my_sql/init:/docker-entrypoint-initdb.d
