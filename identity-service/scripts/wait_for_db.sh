@@ -1,10 +1,9 @@
 #!/bin/sh
 
-echo "⏳ Waiting for MySQL..."
+echo "Waiting for MySQL at ${DB_HOST:-mysql}:${DB_PORT:-3306}..."
 
-# Loop until MySQL is reachable
-while ! nc -z db 3306; do
+while ! nc -z ${DB_HOST:-mysql} ${DB_PORT:-3306}; do
   sleep 1
 done
 
-echo "✅ MySQL is ready!"
+echo "MySQL is ready!"
