@@ -1,6 +1,3 @@
-# Import settings to read JWT configuration
-from django.conf import settings
-
 # Import TokenError to catch invalid or expired token errors
 from rest_framework_simplejwt.exceptions import TokenError
 
@@ -28,10 +25,6 @@ def get_jwt_payload_from_request(request):
     token = auth_header.split(" ", 1)[1]
 
     try:
-        # Print signing key length for debugging only
-        print(
-            "Product JWT SIGNING_KEY length:", len(settings.SIMPLE_JWT["SIGNING_KEY"])
-        )
 
         # Decode and validate the access token
         access_token = AccessToken(token)

@@ -69,3 +69,14 @@ class Product(TimestampedModel):
     # Human-readable object display
     def __str__(self):
         return self.name
+
+    # Computed stock status for API responses
+    @property
+    def stock_status(self):
+        if self.stock_quantity == 0:
+            return "OUT_OF_STOCK"
+
+        if self.stock_quantity <= 10:
+            return "LOW_STOCK"
+
+        return "IN_STOCK"

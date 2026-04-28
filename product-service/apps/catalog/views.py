@@ -11,7 +11,11 @@ from .models import Category, Product
 from .filters import ProductFilter
 
 # Import serializers from catalog app
-from .serializers import CategorySerializer, ProductSerializer
+from .serializers import (
+    CategorySerializer,
+    ProductSerializer,
+    ProductStockUpdateSerializer,
+)
 
 # Import custom permission for admin-only write operations
 from .permissions import IsAdminOrReadOnly
@@ -115,3 +119,27 @@ class ProductDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
 
     # Use ProductSerializer
     serializer_class = ProductSerializer
+
+
+# API for admin-only stock updates
+class ProductStockUpdateAPIView(generics.UpdateAPIView):
+
+    # Only PATCH is supported for this custom stock endpoint
+    http_method_names = ["patch", "options"]
+
+    # Apply permission: only ADMIN can update stock
+    permission_classes = [IsAdminOrReadOnly]
+
+    # Fetch products from database
+    queryset = Product.objects.all()
+
+    # Use stock-only serializer
+    serializer_class = ProductStockUpdateSerializer
+
+    # Handle PATCH /products/<id>/stock
+    def patch(self, request, *args, **kwargs):
+        # Only apply partial stock update
+        kwargs["partial"] = True
+
+        # Let DRF validate, save, and return serializer response
+        return self.partial_update(request, *args, **kwargs)

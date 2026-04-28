@@ -91,6 +91,9 @@ class CatalogAPITest(TestCase):
         # Verify public read is allowed
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+        # Verify stock status is included in product response
+        self.assertEqual(response.data["results"][0]["stock_status"], "IN_STOCK")
+
     # Test customer cannot create product
     def test_customer_cannot_create_product(self):
         # Call product create API using customer token
@@ -163,3 +166,126 @@ class CatalogAPITest(TestCase):
 
         # Verify success
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    # Test admin can update product stock
+    def test_admin_can_update_product_stock(self):
+        # Call stock update API using admin token
+        response = self.client.patch(
+            f"/products/{self.product.id}/stock",
+            {"stock_quantity": 100},
+            HTTP_AUTHORIZATION=f"Bearer {self.admin_token}",
+            format="json",
+        )
+
+        # Verify stock update succeeded
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Verify compact stock response
+        self.assertEqual(response.data["id"], self.product.id)
+        self.assertEqual(response.data["name"], "Sunflower Seeds")
+        self.assertEqual(response.data["stock_quantity"], 100)
+        self.assertEqual(response.data["stock_status"], "IN_STOCK")
+
+        # Verify database stock value changed
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.stock_quantity, 100)
+
+    # Test customer cannot update product stock
+    def test_customer_cannot_update_product_stock(self):
+        # Call stock update API using customer token
+        response = self.client.patch(
+            f"/products/{self.product.id}/stock",
+            {"stock_quantity": 100},
+            HTTP_AUTHORIZATION=f"Bearer {self.customer_token}",
+            format="json",
+        )
+
+        # Verify customer is forbidden
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    # Test anonymous user cannot update product stock
+    def test_anonymous_user_cannot_update_product_stock(self):
+        # Call stock update API without token
+        response = self.client.patch(
+            f"/products/{self.product.id}/stock",
+            {"stock_quantity": 100},
+            format="json",
+        )
+
+        # Verify anonymous user is forbidden
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    # Test stock cannot be negative
+    def test_stock_update_rejects_negative_quantity(self):
+        # Call stock update API with invalid negative stock
+        response = self.client.patch(
+            f"/products/{self.product.id}/stock",
+            {"stock_quantity": -1},
+            HTTP_AUTHORIZATION=f"Bearer {self.admin_token}",
+            format="json",
+        )
+
+        # Verify validation error
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    # Test stock quantity is required for stock update
+    def test_stock_update_requires_stock_quantity(self):
+        # Call stock update API without stock_quantity
+        response = self.client.patch(
+            f"/products/{self.product.id}/stock",
+            {},
+            HTTP_AUTHORIZATION=f"Bearer {self.admin_token}",
+            format="json",
+        )
+
+        # Verify validation error
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("stock_quantity", response.data)
+
+    # Test stock update returns low stock status
+    def test_stock_update_returns_low_stock_status(self):
+        # Call stock update API with low stock quantity
+        response = self.client.patch(
+            f"/products/{self.product.id}/stock",
+            {"stock_quantity": 10},
+            HTTP_AUTHORIZATION=f"Bearer {self.admin_token}",
+            format="json",
+        )
+
+        # Verify low stock status in response
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["stock_status"], "LOW_STOCK")
+
+    # Test stock update returns out of stock status
+    def test_stock_update_returns_out_of_stock_status(self):
+        # Call stock update API with zero stock quantity
+        response = self.client.patch(
+            f"/products/{self.product.id}/stock",
+            {"stock_quantity": 0},
+            HTTP_AUTHORIZATION=f"Bearer {self.admin_token}",
+            format="json",
+        )
+
+        # Verify out of stock status in response
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["stock_status"], "OUT_OF_STOCK")
+
+    # Test stock status values
+    def test_product_stock_status_values(self):
+        # Verify OUT_OF_STOCK
+        self.product.stock_quantity = 0
+        self.product.save()
+        response = self.client.get(f"/products/{self.product.id}")
+        self.assertEqual(response.data["stock_status"], "OUT_OF_STOCK")
+
+        # Verify LOW_STOCK
+        self.product.stock_quantity = 10
+        self.product.save()
+        response = self.client.get(f"/products/{self.product.id}")
+        self.assertEqual(response.data["stock_status"], "LOW_STOCK")
+
+        # Verify IN_STOCK
+        self.product.stock_quantity = 11
+        self.product.save()
+        response = self.client.get(f"/products/{self.product.id}")
+        self.assertEqual(response.data["stock_status"], "IN_STOCK")
