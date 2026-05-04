@@ -20,8 +20,6 @@ class IsAdminOrReadOnly(BasePermission):
         payload = get_jwt_payload_from_request(request)
 
         # If token is missing or invalid, deny access
-        print("JWT Payload:", payload)  # Debug print to check payload content
-
         if not payload:
             return False
 

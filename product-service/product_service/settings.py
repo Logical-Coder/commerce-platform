@@ -27,16 +27,42 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
 
 
+def env_bool(name, default=False):
+    value = os.getenv(name)
+    if value is None:
+        return default
+
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def env_list(name, default=None):
+    value = os.getenv(name)
+    if value is None:
+        return default or []
+
+    return [item.strip() for item in value.split(",") if item.strip()]
+
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-=(*r5+ip+z83fh^760waczpqu!i$*8l%go0p*+e#@$myx@3p=y"
+SECRET_KEY = os.getenv(
+    "PRODUCT_SECRET_KEY",
+    os.getenv(
+        "SECRET_KEY",
+        "django-insecure-dev-product-service-only-change-me",
+    ),
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+ENVIRONMENT = os.getenv("ENVIRONMENT", "local")
+DEBUG = env_bool("PRODUCT_DEBUG", env_bool("DEBUG", ENVIRONMENT != "production"))
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = env_list(
+    "PRODUCT_ALLOWED_HOSTS",
+    env_list("ALLOWED_HOSTS", ["localhost", "127.0.0.1", "testserver"]),
+)
 
 
 # Application definition
@@ -69,7 +95,10 @@ ROOT_URLCONF = "product_service.urls"
 # SimpleJWT configuration for identity-service
 SIMPLE_JWT = {
     # Secret key used to sign JWT tokens
-    "SIGNING_KEY": os.getenv("JWT_SECRET_KEY", SECRET_KEY),
+    "SIGNING_KEY": os.getenv(
+        "JWT_SECRET_KEY",
+        os.getenv("IDENTITY_SECRET_KEY", SECRET_KEY),
+    ),
     # Algorithm used to sign JWT tokens
     "ALGORITHM": os.getenv("JWT_ALGORITHM", "HS256"),
     # Access token valid duration
@@ -176,3 +205,4 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"

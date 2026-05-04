@@ -10,9 +10,6 @@ def get_jwt_payload_from_request(request):
     # Read Authorization header from request
     auth_header = request.headers.get("Authorization")
 
-    # Debug print to check incoming Authorization header
-    print("Authorization Header:", auth_header)
-
     # If Authorization header is missing, return None
     if not auth_header:
         return None
@@ -32,22 +29,13 @@ def get_jwt_payload_from_request(request):
         # Get payload correctly from AccessToken object
         payload = access_token.payload
 
-        # Debug print decoded payload
-        print("JWT Payload:", payload)
-
         # Return payload to permission class
         return payload
 
-    except TokenError as exc:
-        # Print exact token error
-        print("JWT TokenError:", str(exc))
-
+    except TokenError:
         # Return None if token invalid or expired
         return None
 
-    except Exception as exc:
-        # Print unexpected error
-        print("JWT Unexpected Error:", repr(exc))
-
+    except Exception:
         # Return None for safety
         return None

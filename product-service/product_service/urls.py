@@ -25,6 +25,6 @@ from django.urls import path, include
 urlpatterns = [
     # Admin panel route
     path("admin/", admin.site.urls),
-    # Include catalog app URLs at root level
-    path("", include("apps.catalog.urls")),
+    # Include catalog app URLs under API prefix
+    path("api/", include("apps.catalog.urls")),
 ]

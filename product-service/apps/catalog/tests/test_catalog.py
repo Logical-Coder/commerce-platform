@@ -67,7 +67,7 @@ class CatalogAPITest(TestCase):
     # Test health endpoint
     def test_health_api_success(self):
         # Call health API
-        response = self.client.get("/health")
+        response = self.client.get("/api/health/")
 
         # Verify status code
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -78,7 +78,7 @@ class CatalogAPITest(TestCase):
     # Test public category list
     def test_category_list_public_access(self):
         # Call category list without token
-        response = self.client.get("/categories")
+        response = self.client.get("/api/categories/")
 
         # Verify public read is allowed
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -86,7 +86,7 @@ class CatalogAPITest(TestCase):
     # Test public product list
     def test_product_list_public_access(self):
         # Call product list without token
-        response = self.client.get("/products")
+        response = self.client.get("/api/products/")
 
         # Verify public read is allowed
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -98,7 +98,7 @@ class CatalogAPITest(TestCase):
     def test_customer_cannot_create_product(self):
         # Call product create API using customer token
         response = self.client.post(
-            "/products",
+            "/api/products/",
             {
                 "category": self.category.id,
                 "name": "Pumpkin Seeds",
@@ -118,7 +118,7 @@ class CatalogAPITest(TestCase):
     def test_admin_can_create_product(self):
         # Call product create API using admin token
         response = self.client.post(
-            "/products",
+            "/api/products/",
             {
                 "category": self.category.id,
                 "name": "Pumpkin Seeds",
@@ -140,7 +140,7 @@ class CatalogAPITest(TestCase):
     # Test search product
     def test_product_search(self):
         # Search product by keyword
-        response = self.client.get("/products?search=sunflower")
+        response = self.client.get("/api/products/?search=sunflower")
 
         # Verify success
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -151,7 +151,7 @@ class CatalogAPITest(TestCase):
     # Test product price range filter
     def test_product_price_filter(self):
         # Filter products by min and max price
-        response = self.client.get("/products?min_price=100&max_price=150")
+        response = self.client.get("/api/products/?min_price=100&max_price=150")
 
         # Verify success
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -162,7 +162,7 @@ class CatalogAPITest(TestCase):
     # Test product ordering
     def test_product_ordering(self):
         # Order products by price descending
-        response = self.client.get("/products?ordering=-price")
+        response = self.client.get("/api/products/?ordering=-price")
 
         # Verify success
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -171,7 +171,7 @@ class CatalogAPITest(TestCase):
     def test_admin_can_update_product_stock(self):
         # Call stock update API using admin token
         response = self.client.patch(
-            f"/products/{self.product.id}/stock",
+            f"/api/products/{self.product.id}/stock/",
             {"stock_quantity": 100},
             HTTP_AUTHORIZATION=f"Bearer {self.admin_token}",
             format="json",
@@ -194,7 +194,7 @@ class CatalogAPITest(TestCase):
     def test_customer_cannot_update_product_stock(self):
         # Call stock update API using customer token
         response = self.client.patch(
-            f"/products/{self.product.id}/stock",
+            f"/api/products/{self.product.id}/stock/",
             {"stock_quantity": 100},
             HTTP_AUTHORIZATION=f"Bearer {self.customer_token}",
             format="json",
@@ -207,7 +207,7 @@ class CatalogAPITest(TestCase):
     def test_anonymous_user_cannot_update_product_stock(self):
         # Call stock update API without token
         response = self.client.patch(
-            f"/products/{self.product.id}/stock",
+            f"/api/products/{self.product.id}/stock/",
             {"stock_quantity": 100},
             format="json",
         )
@@ -219,7 +219,7 @@ class CatalogAPITest(TestCase):
     def test_stock_update_rejects_negative_quantity(self):
         # Call stock update API with invalid negative stock
         response = self.client.patch(
-            f"/products/{self.product.id}/stock",
+            f"/api/products/{self.product.id}/stock/",
             {"stock_quantity": -1},
             HTTP_AUTHORIZATION=f"Bearer {self.admin_token}",
             format="json",
@@ -232,7 +232,7 @@ class CatalogAPITest(TestCase):
     def test_stock_update_requires_stock_quantity(self):
         # Call stock update API without stock_quantity
         response = self.client.patch(
-            f"/products/{self.product.id}/stock",
+            f"/api/products/{self.product.id}/stock/",
             {},
             HTTP_AUTHORIZATION=f"Bearer {self.admin_token}",
             format="json",
@@ -246,7 +246,7 @@ class CatalogAPITest(TestCase):
     def test_stock_update_returns_low_stock_status(self):
         # Call stock update API with low stock quantity
         response = self.client.patch(
-            f"/products/{self.product.id}/stock",
+            f"/api/products/{self.product.id}/stock/",
             {"stock_quantity": 10},
             HTTP_AUTHORIZATION=f"Bearer {self.admin_token}",
             format="json",
@@ -260,7 +260,7 @@ class CatalogAPITest(TestCase):
     def test_stock_update_returns_out_of_stock_status(self):
         # Call stock update API with zero stock quantity
         response = self.client.patch(
-            f"/products/{self.product.id}/stock",
+            f"/api/products/{self.product.id}/stock/",
             {"stock_quantity": 0},
             HTTP_AUTHORIZATION=f"Bearer {self.admin_token}",
             format="json",
@@ -275,17 +275,17 @@ class CatalogAPITest(TestCase):
         # Verify OUT_OF_STOCK
         self.product.stock_quantity = 0
         self.product.save()
-        response = self.client.get(f"/products/{self.product.id}")
+        response = self.client.get(f"/api/products/{self.product.id}/")
         self.assertEqual(response.data["stock_status"], "OUT_OF_STOCK")
 
         # Verify LOW_STOCK
         self.product.stock_quantity = 10
         self.product.save()
-        response = self.client.get(f"/products/{self.product.id}")
+        response = self.client.get(f"/api/products/{self.product.id}/")
         self.assertEqual(response.data["stock_status"], "LOW_STOCK")
 
         # Verify IN_STOCK
         self.product.stock_quantity = 11
         self.product.save()
-        response = self.client.get(f"/products/{self.product.id}")
+        response = self.client.get(f"/api/products/{self.product.id}/")
         self.assertEqual(response.data["stock_status"], "IN_STOCK")
