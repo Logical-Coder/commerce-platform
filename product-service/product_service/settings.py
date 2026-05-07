@@ -110,6 +110,12 @@ SIMPLE_JWT = {
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [],
+    "DEFAULT_THROTTLE_CLASSES": [
+        "apps.catalog.throttles.JwtUserOrIPRateThrottle",
+    ],
+    "DEFAULT_THROTTLE_RATES": {
+        "user": os.getenv("USER_RATE_LIMIT", "50/min"),
+    },
     # Enable filtering, search, and ordering globally
     "DEFAULT_FILTER_BACKENDS": [
         "django_filters.rest_framework.DjangoFilterBackend",

@@ -1,5 +1,6 @@
 # Import Django test base class
 from django.test import TestCase
+from django.core.cache import cache
 
 # Import DRF APIClient for API testing
 from rest_framework.test import APIClient
@@ -18,6 +19,9 @@ from apps.catalog.models import Category, Product
 class CatalogAPITest(TestCase):
     # This method runs before each test
     def setUp(self):
+        # Keep throttle counters isolated between tests
+        cache.clear()
+
         # Create API client for test requests
         self.client = APIClient()
 
@@ -289,3 +293,19 @@ class CatalogAPITest(TestCase):
         self.product.save()
         response = self.client.get(f"/api/products/{self.product.id}/")
         self.assertEqual(response.data["stock_status"], "IN_STOCK")
+
+    # Test per-user rate limiting
+    def test_product_api_limits_user_to_50_requests_per_minute(self):
+        for _ in range(50):
+            response = self.client.get(
+                "/api/products/",
+                HTTP_AUTHORIZATION=f"Bearer {self.customer_token}",
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        response = self.client.get(
+            "/api/products/",
+            HTTP_AUTHORIZATION=f"Bearer {self.customer_token}",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
