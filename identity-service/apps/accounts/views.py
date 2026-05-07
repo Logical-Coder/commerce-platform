@@ -1,5 +1,6 @@
 # Import Python logging module
 import logging
+import os
 
 # Import Django JSON response helper
 from django.http import JsonResponse
@@ -80,8 +81,16 @@ def health_redis(request):
     logger.info("[VIEW] /health/redis called")
 
     try:
+        redis_host = os.getenv("REDIS_HOST", "127.0.0.1")
+        redis_port = int(os.getenv("REDIS_PORT", "6379"))
+
         # Create Redis client
-        r = redis.Redis(host="127.0.0.1", port=6379, db=0, decode_responses=True)
+        r = redis.Redis(
+            host=redis_host,
+            port=redis_port,
+            db=0,
+            decode_responses=True,
+        )
 
         # Ping Redis
         pong = r.ping()

@@ -40,6 +40,7 @@ services:
       DB_PORT: 3306
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      USER_RATE_LIMIT: ${USER_RATE_LIMIT:-50/min}
     command: >
       sh -c "
       sh scripts/wait_for_db.sh &&
@@ -67,6 +68,7 @@ services:
       DB_PORT: 3306
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      USER_RATE_LIMIT: ${USER_RATE_LIMIT:-50/min}
     command: >
       sh -c "
       sh scripts/wait_for_db.sh &&
@@ -80,6 +82,26 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    networks:
+      - commerce-staging-network
+
+  gateway-service:
+    image: ghcr.io/logical-coder/gateway-service:latest
+    container_name: gateway-service-staging
+    restart: unless-stopped
+    environment:
+      ENVIRONMENT: staging
+      DEBUG: "False"
+      IDENTITY_SERVICE_URL: http://identity-service:8000
+      PRODUCT_SERVICE_URL: http://product-service:8000
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1}
+      USER_RATE_LIMIT: ${USER_RATE_LIMIT:-50/min}
+    command: gunicorn gateway_service.wsgi:application --bind 0.0.0.0:8000 --workers 1
+    ports:
+      - "8081:8000"
+    depends_on:
+      - identity-service
+      - product-service
     networks:
       - commerce-staging-network
 

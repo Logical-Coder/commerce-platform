@@ -1,0 +1,8 @@
+Django
+djangorestframework
+python-dotenv
+requests
+gunicorn
+coverage
+flake8
+black

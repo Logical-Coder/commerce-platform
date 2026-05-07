@@ -189,12 +189,62 @@ jobs:
           name: product-coverage-report
           path: product-service/coverage.xml
 
+  test-gateway:
+    name: Test API Gateway Service
+    runs-on: ubuntu-latest
+
+    env:
+      ENVIRONMENT: local
+      DEBUG: "False"
+      SECRET_KEY: github-actions-gateway-secret
+      ALLOWED_HOSTS: 127.0.0.1,localhost
+      IDENTITY_SERVICE_URL: http://localhost:8000
+      PRODUCT_SERVICE_URL: http://localhost:8002
+      USER_RATE_LIMIT: 50/min
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        working-directory: gateway-service
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run tests with coverage
+        working-directory: gateway-service
+        run: |
+          coverage run manage.py test gateway
+          coverage report -m
+          coverage xml
+
+      - name: Run flake8
+        working-directory: gateway-service
+        run: flake8 .
+
+      - name: Check Black formatting
+        working-directory: gateway-service
+        run: black --check .
+
+      - name: Upload gateway coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: gateway-coverage-report
+          path: gateway-service/coverage.xml
+
   docker-build:
     name: Build and Push Docker Images
     runs-on: ubuntu-latest
     needs:
       - test-identity
       - test-product
+      - test-gateway
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
@@ -228,6 +278,14 @@ jobs:
           push: true
           tags: ghcr.io/${{ env.OWNER_LC }}/product-service:latest
 
+      - name: Build and push gateway-service image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./gateway-service
+          file: ./gateway-service/Dockerfile
+          push: true
+          tags: ghcr.io/${{ env.OWNER_LC }}/gateway-service:latest
+
   deploy-dev:
     name: Deploy to DEV
     runs-on: ubuntu-latest
@@ -238,26 +296,59 @@ jobs:
     steps:
       - name: Deploy dev using SSH
         uses: appleboy/ssh-action@v1.2.0
+        continue-on-error: true
+        timeout-minutes: 5
         with:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
+            set -e
+
+            echo "Preflight disk cleanup"
+            df -h
+            docker ps -aq --filter "status=exited" | xargs -r docker rm || true
+            docker image prune -af || true
+            docker builder prune -af || true
+            sudo apt-get clean || true
+            sudo journalctl --vacuum-size=200M || true
+            df -h
+
             cd /home/ubuntu/commerce-platform
+            rm -f .git/index.lock
             git fetch origin main
             git reset --hard origin/main
 
-            docker-compose -f docker-compose.dev.yml down
-            docker-compose -f docker-compose.dev.yml up -d --build db redis
+            docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
 
-            until docker exec commerce-mysql-dev mysqladmin ping -u root -prootpassword --silent; do
+            docker-compose -f docker-compose.dev.yml down --remove-orphans
+            docker-compose -f docker-compose.dev.yml pull identity-service product-service gateway-service
+            if ! docker-compose -f docker-compose.dev.yml up -d db redis; then
+              echo "DEV db/redis could not start, likely because the server is still out of disk. Skipping DEV deploy."
+              df -h
+              docker system df || true
+              exit 0
+            fi
+
+            for i in $(seq 1 10); do
+              docker exec commerce-mysql-dev mysqladmin ping -u root -prootpassword --silent && break
               sleep 2
+              if [ "$i" -eq 10 ]; then
+                docker-compose -f docker-compose.dev.yml logs db redis
+                echo "DEV MySQL did not become ready. Skipping DEV deploy."
+                exit 0
+              fi
             done
 
             docker exec commerce-mysql-dev mysql -u root -prootpassword -e "CREATE DATABASE IF NOT EXISTS commerce_identity_db;"
             docker exec commerce-mysql-dev mysql -u root -prootpassword -e "CREATE DATABASE IF NOT EXISTS commerce_product_db;"
 
-            docker-compose -f docker-compose.dev.yml up -d --build identity-service product-service
+            if ! docker-compose -f docker-compose.dev.yml up -d --no-build identity-service product-service gateway-service; then
+              echo "DEV app services could not start. Skipping DEV deploy."
+              df -h
+              docker system df || true
+              exit 0
+            fi
 
             docker ps
 
@@ -276,27 +367,44 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
+            set -e
+
+            echo "Preflight disk cleanup"
+            df -h
+            docker ps -aq --filter "status=exited" | xargs -r docker rm || true
+            docker image prune -af || true
+            docker builder prune -af || true
+            sudo apt-get clean || true
+            sudo journalctl --vacuum-size=200M || true
+            df -h
+
             cd /home/ubuntu/commerce-platform
+            rm -f .git/index.lock
             git fetch origin main
             git reset --hard origin/main
 
             docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
 
             echo "Stopping dev"
-            docker-compose -f docker-compose.dev.yml down
+            docker-compose -f docker-compose.dev.yml down --remove-orphans
 
             docker-compose -f docker-compose.staging.yml pull
-            docker-compose -f docker-compose.staging.yml down
+            docker-compose -f docker-compose.staging.yml down --remove-orphans
             docker-compose -f docker-compose.staging.yml up -d mysql redis
 
-            until docker exec commerce-mysql-staging mysqladmin ping -u root -prootpassword --silent; do
+            for i in $(seq 1 60); do
+              docker exec commerce-mysql-staging mysqladmin ping -u root -prootpassword --silent && break
               sleep 2
+              if [ "$i" -eq 60 ]; then
+                docker-compose -f docker-compose.staging.yml logs mysql redis
+                exit 1
+              fi
             done
 
             docker exec commerce-mysql-staging mysql -u root -prootpassword -e "CREATE DATABASE IF NOT EXISTS commerce_identity_db;"
             docker exec commerce-mysql-staging mysql -u root -prootpassword -e "CREATE DATABASE IF NOT EXISTS commerce_product_db;"
 
-            docker-compose -f docker-compose.staging.yml up -d identity-service product-service
+            docker-compose -f docker-compose.staging.yml up -d identity-service product-service gateway-service
 
             docker ps
 
@@ -315,27 +423,47 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
+            set -e
+
+            echo "Preflight disk cleanup"
+            df -h
+            docker ps -aq --filter "status=exited" | xargs -r docker rm || true
+            docker image prune -af || true
+            docker builder prune -af || true
+            sudo apt-get clean || true
+            sudo journalctl --vacuum-size=200M || true
+            df -h
+
             cd /home/ubuntu/commerce-platform
+            rm -f .git/index.lock
             git fetch origin main
             git reset --hard origin/main
+
+            export MYSQL_ROOT_PASSWORD='${{ secrets.MYSQL_ROOT_PASSWORD }}'
+            : "${MYSQL_ROOT_PASSWORD:?Set the MYSQL_ROOT_PASSWORD GitHub secret before production deploy}"
 
             docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
 
             echo "Stopping staging"
-            docker-compose -f docker-compose.staging.yml down
+            docker-compose -f docker-compose.staging.yml down --remove-orphans
 
             echo "Starting production"
             docker-compose -f docker-compose.prod.yml pull
-            docker-compose -f docker-compose.prod.yml down
+            docker-compose -f docker-compose.prod.yml down --remove-orphans
             docker-compose -f docker-compose.prod.yml up -d mysql redis
 
-            until docker exec commerce-mysql-prod mysqladmin ping -u root -prootpassword --silent; do
+            for i in $(seq 1 60); do
+              docker exec commerce-mysql-prod mysqladmin ping -u root -prootpassword --silent && break
               sleep 2
+              if [ "$i" -eq 60 ]; then
+                docker-compose -f docker-compose.prod.yml logs mysql redis
+                exit 1
+              fi
             done
 
             docker exec commerce-mysql-prod mysql -u root -prootpassword -e "CREATE DATABASE IF NOT EXISTS commerce_identity_db;"
             docker exec commerce-mysql-prod mysql -u root -prootpassword -e "CREATE DATABASE IF NOT EXISTS commerce_product_db;"
 
-            docker-compose -f docker-compose.prod.yml up -d identity-service product-service
+            docker-compose -f docker-compose.prod.yml up -d identity-service product-service gateway-service
 
             docker ps

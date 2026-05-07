@@ -150,6 +150,12 @@ REST_FRAMEWORK = {
     ),
     # Default permission requires login unless view overrides it
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
+    "DEFAULT_THROTTLE_CLASSES": [
+        "apps.accounts.throttles.UserOrIPRateThrottle",
+    ],
+    "DEFAULT_THROTTLE_RATES": {
+        "user": os.getenv("USER_RATE_LIMIT", "50/min"),
+    },
 }
 
 # SimpleJWT configuration for identity-service

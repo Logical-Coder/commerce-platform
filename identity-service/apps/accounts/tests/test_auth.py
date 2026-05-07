@@ -1,5 +1,6 @@
 # Import Django test base class
 from django.test import TestCase
+from django.core.cache import cache
 
 # Import DRF API test client
 from rest_framework.test import APIClient
@@ -15,6 +16,9 @@ from apps.accounts.models import Account
 class AuthAPITest(TestCase):
     # Setup runs before each test method
     def setUp(self):
+        # Keep throttle counters isolated between tests
+        cache.clear()
+
         # Create reusable API client
         self.client = APIClient()
 
@@ -233,3 +237,28 @@ class AuthAPITest(TestCase):
 
         # Verify response role is ADMIN
         self.assertEqual(response.data["role"], "ADMIN")
+
+    def test_authenticated_user_is_limited_to_50_requests_per_minute(self):
+        login_response = self.client.post(
+            "/api/auth/login",
+            {
+                "email": self.email,
+                "password": self.password,
+            },
+            format="json",
+        )
+        access_token = login_response.data["access"]
+
+        for _ in range(50):
+            response = self.client.get(
+                "/api/auth/me",
+                HTTP_AUTHORIZATION=f"Bearer {access_token}",
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        response = self.client.get(
+            "/api/auth/me",
+            HTTP_AUTHORIZATION=f"Bearer {access_token}",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
